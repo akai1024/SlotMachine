@@ -16,3 +16,14 @@
 1. MongoDb存取設定配置與玩家資料、遊戲紀錄等資料庫實作
 2. 優化盤面滾動表演
 
+---
+
+## Features
+![畫面展示1](public/features/preview1.png)  
+布局展示  
+
+![畫面展示2](public/features/preview2.png)  
+點選歷史得分展示  
+
+![畫面展示3](public/features/preview3.png)  
+中獎線位置資訊(待優化)  
