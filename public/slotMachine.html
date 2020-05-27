@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SlotMachine</title>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="slotMachine">
+        <v-app>
+            <p class="subtitle-2 text-center">
+                This is slot machine
+            </p>
+
+            <v-row class="mx-auto">
+                <!-- 提示視窗 -->
+                <v-dialog v-model="dialog.enable" max-width="290">
+                    <v-card>
+                        <v-card-title class="headline">{{ dialog.title }}</v-card-title>
+                        <v-card-text>{{ dialog.content }}</v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="green darken-1" text @click="dialog.enable = false">
+                                OK
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
+
+                <v-card class="mx-auto" max-width="800" max-height="400" outlined>
+                    <!-- 玩家資訊 -->
+                    <v-list-item three-line>
+                        <v-list-item-content>
+                            <div class="overline mb-4">Player Informations</div>
+                            <v-list-item-title class="headline mb-1">{{ player.name }}</v-list-item-title>
+                            <v-list-item-subtitle> Money: {{ player.money }} </v-list-item-subtitle>
+                            <v-list-item-subtitle>
+                                Debt: {{ player.debt }}
+                                <v-btn x-small @click="playerLoanMoney" color="blue-grey darken-4" :disabled="isSpin">
+                                    Loan({{ loanMoney }})</v-btn>
+                            </v-list-item-subtitle>
+                            <v-list-item-subtitle>Bets: {{ player.bets }}</v-list-item-subtitle>
+                            <v-list-item-subtitle>Wins: {{ player.wins }}</v-list-item-subtitle>
+                            <v-list-item-subtitle>MaxWin: {{ player.maxWin }}</v-list-item-subtitle>
+                        </v-list-item-content>
+
+                        <v-list-item-avatar tile size="80" color="grey"></v-list-item-avatar>
+                    </v-list-item>
+
+                    <v-card-actions>
+                        <!-- 盤面 -->
+                        <v-card class="mx-auto" width="300" height="166" color="blue lighten-5">
+                            <v-slide-y-transition>
+                                <div v-if="spark">
+                                    <v-row class="ma-1" v-for="row in showRibbons">
+                                        <v-sheet class="mx-1" width="50" height="50" elevation="24"
+                                            v-for="symbol in row" :color="symbol.color">
+                                            <p class="subtitle-2 text-center">
+                                                {{symbol.symbol}}
+                                            </p>
+                                        </v-sheet>
+                                    </v-row>
+                                </div>
+                            </v-slide-y-transition>
+                        </v-card>
+                        <!-- 操作區域 -->
+                        <v-card width="150" height="200">
+                            <v-btn @click="playerBet" width="150" height="150" color="blue-grey darken-2"
+                                :disabled="isSpin">Bet:
+                                {{ getBetMoney() }}</v-btn>
+                            <v-btn @click="playerMaxBet" width="150" height="50" color="blue-grey darken-4"
+                                :disabled="isSpin">MaxBet
+                            </v-btn>
+                        </v-card>
+                        <v-btn @click="playerSpin" width="200" height="200" color="red darken-3" :disabled="isSpin">Spin
+                        </v-btn>
+                    </v-card-actions>
+
+                    <v-card-actions>
+                        <v-btn color="green" @click="getShowBingoLines">Show Bingo Lines</v-btn>
+                        <div>Recent Scores:</div>
+                        <v-chip class="ma-3" pill v-for="score in recentScores" @click="showScore(score)">
+                            {{ score.win }}
+                        </v-chip>
+                    </v-card-actions>
+                </v-card>
+            </v-row>
+
+            <template>
+                <div class="text-center">
+                    <v-bottom-sheet v-model="showBingoLines" persistent>
+                        <v-sheet class="text-center" >
+                            <v-btn class="mt-6" color="error" @click="getShowBingoLines">close</v-btn>
+                            <div class="py-3" v-for="line in bingoLinesInfo">{{ line }}</div>
+                        </v-sheet>
+                    </v-bottom-sheet>
+                </div>
+            </template>
+
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="js/slotMachine.js"></script>
+</body>
+
+</html>
