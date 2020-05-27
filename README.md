@@ -7,6 +7,7 @@
 
 ## 初始化
 
+此專案需要安裝nodeJs，在專案目錄下執行下列指令
 1. `npm init`
 2. `npm install express --save`
 
