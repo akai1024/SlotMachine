@@ -138,7 +138,7 @@ var vue = new Vue({
 
 		playerBet() {
 			this.betCount++;
-			if (this.betCount >= this.maxBetCount) {
+			if (this.betCount > this.maxBetCount) {
 				this.betCount = 1;
 			}
 		},
