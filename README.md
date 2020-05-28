@@ -8,8 +8,7 @@
 ## 初始化
 
 此專案需要安裝nodeJs，在專案目錄下執行下列指令
-1. `npm init`
-2. `npm install express --save` 安裝express
+1. `npm install express --save` 安裝express
 3. `node main.js` 執行server
 4. 打開瀏覽器瀏覽 `localhost:3000` 就可以看到遊戲畫面
 
