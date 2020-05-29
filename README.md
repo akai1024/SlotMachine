@@ -7,16 +7,16 @@
 
 ## 初始化
 
-此專案需要安裝nodeJs，在專案目錄下執行下列指令
-1. `npm init`
-2. `npm install express --save` 安裝express
+此專案需要安裝nodeJs、mongoDB，在專案目錄下執行下列指令
+1. `npm install express --save` 安裝express
+2. `npm install mongoose` 安裝mongoose套件
 3. `node main.js` 執行server
 4. 打開瀏覽器瀏覽 `localhost:3000` 就可以看到遊戲畫面
 
 
 ## TODOs
 
-1. MongoDb存取設定配置與玩家資料、遊戲紀錄等資料庫實作
+1. 遊戲紀錄存檔
 2. 優化盤面滾動表演
 3. 優化中獎線表現與中獎線資訊內容
 

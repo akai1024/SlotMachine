@@ -31,9 +31,12 @@ var vue = new Vue({
 			title: '',
 			content: '',
 		},
+		isLogin: false,
 		isSpin: false,
 		showBingoLines: false,
 		bingoLinesInfo: null,
+
+		loginName: '',
 
 		// 玩家資料
 		player: {
@@ -67,7 +70,12 @@ var vue = new Vue({
 			symbolMapping.set(symbol.number, symbol.show);
 		}
 		this.symbolMapping = symbolMapping;
-		this.getPlayerInfos();
+
+		let loginName = sessionStorage.getItem('loginName');
+		if (loginName) {
+			this.loginName = loginName;
+			this.getPlayerInfos();
+		}
 	},
 
 	mounted() {
@@ -106,18 +114,25 @@ var vue = new Vue({
 
 		getPlayerInfos() {
 			console.log('getPlayerInfos...');
-			this.postData('/getPlayerInfos', {}, this.getPlayerInfoResult);
+			this.postData('/getPlayerInfos', { name: this.loginName }, this.getPlayerInfoResult);
 		},
 
 		getPlayerInfoResult(response) {
 			console.log('getPlayerInfoResult:', response);
-			// response是server的player結構
-			this.player.name = response.name;
-			this.player.money = response.money;
-			this.player.bets = response.betRounds;
-			this.player.wins = response.winRounds;
-			this.player.maxWin = response.maxWin;
-			this.player.debt = response.debt;
+			if (this.loginName === response.name) {
+				// response是server的player結構
+				this.player.name = response.name;
+				this.player.money = response.money;
+				this.player.bets = response.betRounds;
+				this.player.wins = response.winRounds;
+				this.player.maxWin = response.maxWin;
+				this.player.debt = response.debt;
+
+				sessionStorage.setItem('loginName', this.loginName);
+				this.isLogin = true;
+			} else {
+				this.showDialog('Error', 'Wrong player name!');
+			}
 		},
 
 		refreshRibbons(screen) {
@@ -159,7 +174,7 @@ var vue = new Vue({
 				this.showDialog('Error', 'Not enough money');
 				return;
 			}
-			this.postData('/spin', { betCount: this.betCount }, this.spinResult);
+			this.postData('/spin', { betCount: this.betCount, player: this.player }, this.spinResult);
 			this.spark = false;
 			this.player.money -= this.getBetMoney();
 			this.isSpin = true;
@@ -167,6 +182,10 @@ var vue = new Vue({
 
 		spinResult(response) {
 			console.log('spinResult:', response);
+			if (!response.isSuccess) {
+				return;
+			}
+
 			this.screen = response.screen;
 			this.spark = true;
 			this.bingoIndex.clear();
@@ -210,7 +229,7 @@ var vue = new Vue({
 		},
 
 		playerLoanMoney() {
-			this.postData('/loanMoney', { money: this.loanMoney }, this.loanMoneyResult);
+			this.postData('/loanMoney', { money: this.loanMoney, name: this.player.name }, this.loanMoneyResult);
 		},
 
 		loanMoneyResult(response) {
