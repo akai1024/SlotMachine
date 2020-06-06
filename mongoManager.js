@@ -37,5 +37,31 @@ let PlayerModel = mongoose.model('player',
     )
 );
 
+// 遊戲紀錄
+let recordScheme = new Schema(
+    {
+        roundNumber: String,
+        gameTime: Number,
+        playerName: String,
+        screen: [Number],
+        betMoney: Number,
+        totalScore: Number,
+        bingoLines: [
+            {
+                key: String,
+                score: Number,
+                indexes: [Number]
+            }
+        ],
+    },
+    { versionKey: false }
+);
+recordScheme.index({ roundNumber: 1 });
+recordScheme.index({ playerName: 1 });
+recordScheme.index({ gameTime: 1 });
+let RecordModel = mongoose.model('record', recordScheme);
+
+
 exports.db = db;
 exports.PlayerModel = PlayerModel;
+exports.RecordModel = RecordModel;

@@ -37,7 +37,8 @@ function createPlayer(playerName, res) {
     let newPlayer = new mongoDb.PlayerModel(new Player(playerName, 2000, 0, 0, 0, 0));
     newPlayer.save((error, playerModel) => {
         if (error) {
-            console.log('createPlayerModelResult!', error);
+            console.log('createPlayer fail!', error);
+            return;
         }
         res.send(JSON.stringify(playerModel));
     });
@@ -90,7 +91,7 @@ function updatePlayerMoney(playerName, isDebt, addMoney, subMoney, callback, ...
                 if (isDebt) {
                     playerModel.debt += addMoney;
                 }
-                
+
                 if (addMoney) {
                     playerModel.winRounds++;
                     playerModel.money += addMoney;
@@ -99,7 +100,7 @@ function updatePlayerMoney(playerName, isDebt, addMoney, subMoney, callback, ...
                         playerModel.maxWin = addMoney;
                     }
                 }
-                
+
                 // 目前只有下注會扣錢
                 if (subMoney) {
                     playerModel.betRounds++;
@@ -146,6 +147,8 @@ function betBack(isSuccess, playerModel, callbackParams) {
     let bingoLines = slotCore.getBingoLines(screen);
     let totalScore = slotCore.getBingoScore(betMoney, bingoLines);
     let roundInfo = {
+        roundNumber: getRandomString(8),
+        gameTime: Date.now(),
         betMoney: betMoney,
         screen: screen,
         bingoLines: bingoLines,
@@ -162,6 +165,9 @@ function betBack(isSuccess, playerModel, callbackParams) {
     // 沒獲得金錢
     roundInfo.isSuccess = true;
     res.send(JSON.stringify(roundInfo));
+
+    // 寫遊戲紀錄
+    saveRecord(playerModel.name, roundInfo);
 }
 
 // 玩家增加得分back
@@ -170,6 +176,9 @@ function scoreBack(isSuccess, playerModel, callbackParams) {
     let roundInfo = callbackParams[1];
     roundInfo.isSuccess = isSuccess;
     res.send(JSON.stringify(roundInfo));
+
+    // 寫遊戲紀錄
+    saveRecord(playerModel.name, roundInfo);
 }
 
 // 借貸callback
@@ -182,6 +191,54 @@ function loanMoneyBack(isSuccess, playerModel, callbackParams) {
         player: playerModel
     }));
 }
+
+// 儲存遊戲紀錄
+function saveRecord(playerName, roundInfo) {
+    if (!playerName || !roundInfo) {
+        return;
+    }
+    let record = new mongoDb.RecordModel(
+        {
+            roundNumber: roundInfo.roundNumber,
+            gameTime: roundInfo.gameTime,
+            playerName: playerName,
+            screen: roundInfo.screen,
+            betMoney: roundInfo.betMoney,
+            totalScore: roundInfo.totalScore,
+            bingoLines: roundInfo.bingoLines
+        }
+    );
+    record.save((error, recordModel) => {
+        if (error) {
+            console.log('saveRecord fail!', error);
+        }
+    });
+}
+
+// 取得隨機字串
+function getRandomString(length) {
+    return length ? Math.random().toString(36).substring(2, length + 2) : null;
+}
+
+// 玩家取得遊戲紀錄
+app.post('/getRecords', (req, res) => {
+    let request = req.body;
+    console.log('getRecords! req:' + JSON.stringify(request));
+
+    let playerName = request.name;
+    mongoDb.RecordModel.
+        find().
+        where('playerName').equals(playerName).
+        sort({gameTime: -1}).limit(100).
+        exec((error, records) => {
+            if (error) {
+                console.log('find records fail!', error);
+                return;
+            }
+
+            res.send(JSON.stringify(records));
+        });
+});
 
 app.listen(port, () => console.log(`App listening at http://localhost:${port}`));
 

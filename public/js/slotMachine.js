@@ -29,12 +29,15 @@ var vue = new Vue({
 		dialog: {
 			enable: false,
 			title: '',
+			subtitle: '',
 			content: '',
 		},
 		isLogin: false,
 		isSpin: false,
 		showBingoLines: false,
 		bingoLinesInfo: null,
+		showRecords: false,
+		records: [],
 
 		loginName: '',
 
@@ -106,9 +109,10 @@ var vue = new Vue({
 				;
 		},
 
-		showDialog(title, content = '') {
+		showDialog(title, subtitle = '', content = '') {
 			this.dialog.enable = true;
 			this.dialog.title = title;
+			this.dialog.subtitle = subtitle;
 			this.dialog.content = content;
 		},
 
@@ -131,7 +135,7 @@ var vue = new Vue({
 				sessionStorage.setItem('loginName', this.loginName);
 				this.isLogin = true;
 			} else {
-				this.showDialog('Error', 'Wrong player name!');
+				this.showDialog('Error', '', 'Wrong player name!');
 			}
 		},
 
@@ -171,7 +175,7 @@ var vue = new Vue({
 				return;
 			}
 			if (this.player.money < this.getBetMoney()) {
-				this.showDialog('Error', 'Not enough money');
+				this.showDialog('Error', '', 'Not enough money');
 				return;
 			}
 			this.postData('/spin', { betCount: this.betCount, player: this.player }, this.spinResult);
@@ -200,25 +204,8 @@ var vue = new Vue({
 				}
 				this.player.money += response.totalScore;
 
-				// 中獎線分析
-				let lines = [];
-				for (line of response.bingoLines) {
-					let lineKeys = line.key.split('-');
-					lines.push(this.getShowSymbol(lineKeys[0]) + 'x' + lineKeys[1]);
-					// 中獎位置
-					for (idx of line.indexes) {
-						this.bingoIndex.add(idx);
-					}
-				}
-
-				// 歷史紀錄
-				this.recentScores.push(
-					{
-						bet: response.betMoney,
-						win: response.totalScore,
-						lines: lines
-					}
-				);
+				// 轉成展示用的資訊
+				this.recentScores.push(this.convertRecordToShowScore(response));
 				if (this.recentScores.length > 5) {
 					this.recentScores.splice(0, 1);
 				}
@@ -246,8 +233,13 @@ var vue = new Vue({
 				return;
 			}
 			let lineString = score.lines.join(',');
-			let content = `bet: ${score.bet}, win: ${score.win}, lines: ${lineString}`;
-			this.showDialog('ScoreInfo:', content);
+			let time = new Date(score.time);
+			let content = score.win ?
+				`RN: ${score.round}, bet: ${score.bet}, win: ${score.win}, lines: ${lineString}`
+				:
+				`RN: ${score.round}, bet: ${score.bet}, win: ${score.win}`
+				;
+			this.showDialog('ScoreInfo:', time, content);
 		},
 
 		getShowBingoLines() {
@@ -261,6 +253,46 @@ var vue = new Vue({
 			console.log('getBingoLinesResult:', response);
 			this.bingoLinesInfo = response;
 		},
+
+		getRecords() {
+			this.showRecords = !this.showRecords;
+			if (this.showRecords) {
+				this.postData('/getRecords', { name: this.player.name }, this.getRecordsResult);
+			}
+		},
+
+		getRecordsResult(response) {
+			console.log('getRecordsResult:', response);
+			// response是server的得分結構，轉成client用的
+			if (response) {
+				let records = [];
+				for (record of response) {
+					records.push(this.convertRecordToShowScore(record));
+				}
+				this.records = records;
+			}
+		},
+
+		convertRecordToShowScore(record) {
+			// 中獎線分析
+			let lines = [];
+			for (line of record.bingoLines) {
+				let lineKeys = line.key.split('-');
+				lines.push(this.getShowSymbol(lineKeys[0]) + 'x' + lineKeys[1]);
+				// 中獎位置
+				for (idx of line.indexes) {
+					this.bingoIndex.add(idx);
+				}
+			}
+
+			return {
+				round: record.roundNumber,
+				time: record.gameTime,
+				bet: record.betMoney,
+				win: record.totalScore,
+				lines: lines
+			};
+		}
 
 	},
 });
